@@ -1,0 +1,2 @@
+[ci-servers]
+FirstServes ansible_host=10.130.7.114

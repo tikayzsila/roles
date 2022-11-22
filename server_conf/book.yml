@@ -1,0 +1,30 @@
+- hosts: ci-servers
+  become: true
+  gather_facts: false
+
+  tasks:
+  - name: Creates project dir
+    file:
+      path: "/home/{{ansible_user}}/{{PROJECT}}"
+      owner: "{{ansible_user}}"
+      group: "{{ansible_user}}"
+      mode: '0644'
+      state: directory
+  
+  - name: Copy role files to server
+    ansible.builtin.copy:
+      src: "{{ playbook_dir }}/../templates/ansible/"
+      dest: "/home/{{ansible_user}}/{{PROJECT}}"
+      owner: "{{ansible_user}}"
+      group: "{{ansible_user}}"
+      mode: '0644'
+
+  - name: Vault encrypt a given file
+    expect:
+      command: ansible-vault encrypt --ask-vault-pass {{item.file}}
+      responses:
+        New Vault password: "{{ item.vault_pass }}"
+        Confirm New Vault password: "{{ item.vault_pass }}"
+    with_items:
+      - { file: 'stage.yml', vault_pass: "{{encr_password_stage}}" }
+      - { file: 'prod.yml', vault_pass: "{{encr_password_prod}}" }

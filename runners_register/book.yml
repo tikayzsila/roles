@@ -1,0 +1,24 @@
+- hosts: ci-servers
+  become: true
+  gather_facts: false
+
+  tasks:
+  - name: Register Runners
+    async: 180 # Maximum allowed time in Seconds
+    poll: 05 # Polling Interval in Seconds
+    expect:
+      command: sudo gitlab-runner register
+      responses:
+        Enter the GitLab instance URL: https://gitlab.space-tech.online/
+        Enter the registration token: "{{TOKEN}}"
+        Enter a description for the runner: "{{item.name}}"
+        Enter tags for the runner: "{{item.tag}}"
+        Enter optional maintenance note for the runner: ''
+        Enter an executor: shell
+    with_items:
+      - { name: 'builder(stage)', tag: "{{runner_tag_build_stage}}" }
+      - { name: 'builder(prod)', tag: "{{runner_tag_build_prod}}" }
+      - { name: 'deploy(stage)', tag: "{{runner_tag_depl_stage}}" }
+      - { name: 'deploy(prod)', tag: "{{runner_tag_depl_prod}}" }
+  - name: Verify runners
+    command: sudo gitlab-runner verify --delete
